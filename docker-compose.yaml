@@ -1,0 +1,53 @@
+services:
+  test: &base
+    build:
+      context: ./
+      target: dev
+    image: hawkeye-test
+    command: go test -v ./...
+    volumes:
+      - .:/go/src/github.com/michelsazevedo/hawkeye/
+    depends_on:
+      - elasticsearch
+      - nats
+    stdin_open: true
+    tty: true
+    environment:
+      - ELASTICSEARCH_URL=http://es:9200
+      - NATS_URL=nats://nats:4222
+
+  web:
+    <<: *base
+    image: hawkeye_web
+    command: go run cmd/main.go
+    ports:
+      - "8080:8080"
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.8.0
+    restart: always
+    container_name: es
+    environment:
+      - "ES_JAVA_OPTS=-Xms1024m -Xmx1024m"
+      - transport.host=0.0.0.0
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+    volumes:
+      - elastic_data:/usr/share/elasticsearch/data
+    ports:
+      - 9201:9200
+      - 9301:9300
+
+  nats:
+    image: nats:latest
+    restart: unless-stopped
+    ports:
+      - "4222:4222"
+      - "8222:8222"
+    command: "--http_port 8222"
+    hostname: nats
+
+
+volumes:
+  db_data:
+  elastic_data:

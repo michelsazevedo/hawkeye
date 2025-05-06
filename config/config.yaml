@@ -1,0 +1,27 @@
+nats:
+  url: "${NATS_URL}"
+
+elasticsearch:
+  url: "${ELASTICSEARCH_URL}"
+  indices:
+    - name: courses
+      properties:
+        - name: id
+          type: keyword
+        - name: name
+          type: text
+          analyzer: standard
+        - name: content
+          type: text
+          analyzer: standard
+        - name: author
+          type: text
+          analyzer: standard
+        - name: thumb
+          type: text
+          index: false
+
+settings:
+  secret: uY7abg321tyw097
+  server:
+    port: ":8080"

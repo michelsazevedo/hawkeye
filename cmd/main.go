@@ -5,6 +5,7 @@ import (
 	"go.uber.org/fx/fxevent"
 
 	"github.com/michelsazevedo/hawkeye/config"
+	"github.com/michelsazevedo/hawkeye/modules"
 	"github.com/rs/zerolog/log"
 )
 
@@ -17,6 +18,7 @@ func main() {
 			config.NewConfig,
 			config.NewApplication,
 		),
+		modules.Modules(),
 		fx.Invoke(config.Routes),
 	)
 

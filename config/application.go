@@ -20,6 +20,7 @@ func NewApplication(lc fx.Lifecycle, conf *Config) *echo.Echo {
 	e := echo.New()
 	e.Use(middleware.Recover())
 	e.Use(m.Zerolog)
+	e.Use(m.Subdomain)
 
 	e.GET("/healthz", func(c echo.Context) error {
 		return c.JSON(http.StatusOK, map[string]string{"status": "ok"})

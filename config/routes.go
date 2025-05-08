@@ -7,6 +7,14 @@ import (
 )
 
 func Routes(e *echo.Echo, courseHandler api.SearchHandler[domain.Course]) {
-	courses := e.Group("courses")
-	courses.GET("/search", courseHandler.Search)
+	courses := e.Group("/", func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			if c.Get("subdomain") == "courses" {
+				return next(c)
+			}
+			return echo.ErrNotFound
+		}
+	})
+
+	courses.GET("search", courseHandler.Search)
 }

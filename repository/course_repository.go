@@ -30,6 +30,10 @@ func NewCourseRepository(conf *config.Config) domain.SearchRepository[domain.Cou
 	return &courseRepository{esClient: esClient}
 }
 
+func (c *courseRepository) Index(ctx context.Context, course domain.Course) error {
+	return c.esClient.Index(ctx, index, &course)
+}
+
 func (c *courseRepository) Search(ctx context.Context, query string) ([]domain.Course, error) {
 	esQuery := es.NewQuery(query).
 		AddField("name").

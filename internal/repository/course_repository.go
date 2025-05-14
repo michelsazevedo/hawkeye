@@ -3,9 +3,9 @@ package repository
 import (
 	"context"
 
-	"github.com/michelsazevedo/hawkeye/config"
-	"github.com/michelsazevedo/hawkeye/domain"
-	es "github.com/michelsazevedo/hawkeye/repository/elasticsearch"
+	"github.com/michelsazevedo/hawkeye/internal/config"
+	"github.com/michelsazevedo/hawkeye/internal/domain"
+	es "github.com/michelsazevedo/hawkeye/internal/repository/elasticsearch"
 	"github.com/rs/zerolog/log"
 )
 

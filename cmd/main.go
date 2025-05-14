@@ -4,8 +4,8 @@ import (
 	"go.uber.org/fx"
 	"go.uber.org/fx/fxevent"
 
-	"github.com/michelsazevedo/hawkeye/config"
-	"github.com/michelsazevedo/hawkeye/modules"
+	"github.com/michelsazevedo/hawkeye/internal/config"
+	"github.com/michelsazevedo/hawkeye/internal/modules"
 	"github.com/rs/zerolog/log"
 )
 

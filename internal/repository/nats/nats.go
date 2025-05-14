@@ -1,10 +1,15 @@
 package nats
 
 import (
-	"github.com/michelsazevedo/hawkeye/config"
-	"github.com/michelsazevedo/hawkeye/domain"
+	"context"
+
+	"github.com/michelsazevedo/hawkeye/internal/config"
+	"github.com/michelsazevedo/hawkeye/internal/domain"
 	"github.com/nats-io/nats.go"
 	"github.com/rs/zerolog/log"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 type natsRepository struct {
@@ -24,7 +29,21 @@ func NewNatsRepository(conf *config.Config) domain.BrokerRepository {
 
 func (n *natsRepository) Subscribe(subject string, handler domain.MessageHandler) error {
 	_, err := n.natsConn.Subscribe(subject, func(message *nats.Msg) {
-		handler(domain.Message{
+		ctx := context.Background()
+		tracer := otel.Tracer("nats.subscribe")
+
+		ctx, span := tracer.Start(ctx, "nats.receive.message",
+			trace.WithAttributes(
+				attribute.String("messaging.system", "nats"),
+				attribute.String("messaging.destination", subject),
+				attribute.String("messaging.destination_kind", "topic"),
+				attribute.String("messaging.protocol", "nats"),
+				attribute.String("messaging.operation", "receive"),
+			),
+		)
+		defer span.End()
+
+		handler(ctx, domain.Message{
 			Subject: message.Subject,
 			Data:    message.Data,
 		})

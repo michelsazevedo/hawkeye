@@ -10,6 +10,9 @@ services:
     depends_on:
       - elasticsearch
       - nats
+      - prometheus
+      - grafana
+      - jaeger
     stdin_open: true
     tty: true
     environment:
@@ -19,7 +22,13 @@ services:
   web:
     <<: *base
     image: hawkeye_web
+    container_name: hawkeye
     command: go run cmd/main.go
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://courses.hawkeye.local:8080/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
     ports:
       - "80:8080"
 
@@ -41,13 +50,44 @@ services:
   nats:
     image: nats:latest
     restart: unless-stopped
+    container_name: nats
     ports:
       - "4222:4222"
       - "8222:8222"
     command: "--http_port 8222"
     hostname: nats
 
+  prometheus:
+    image: prom/prometheus:v2.55.0
+    restart: unless-stopped
+    container_name: prometheus
+    volumes:
+      - prometheus_data:/prometheus
+      - ./docker/prometheus.yaml:/etc/prometheus/prometheus.yml
+    ports:
+      - 9090:9090
+    
+  grafana:
+    image: grafana/grafana:11.3.0
+    restart: unless-stopped
+    container_name: grafana
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./docker/grafana.yaml:/etc/grafana/provisioning/datasources/datasource.yaml
+    ports:
+      - 3000:3000
+
+  jaeger:
+    image: jaegertracing/all-in-one
+    restart: unless-stopped
+    container_name: jaeger
+    ports:
+      - "16686:16686"
+      - "4318:4318"
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
 
 volumes:
-  db_data:
   elastic_data:
+  grafana_data:
+  prometheus_data:

@@ -10,7 +10,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"go.uber.org/fx"
 
-	m "github.com/michelsazevedo/hawkeye/middleware"
+	m "github.com/michelsazevedo/hawkeye/internal/middleware"
 )
 
 func NewApplication(lc fx.Lifecycle, conf *Config) *echo.Echo {

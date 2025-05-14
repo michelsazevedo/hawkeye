@@ -7,7 +7,7 @@ import (
 	"testing"
 
 	"github.com/labstack/echo/v4"
-	"github.com/michelsazevedo/hawkeye/domain"
+	"github.com/michelsazevedo/hawkeye/internal/domain"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )

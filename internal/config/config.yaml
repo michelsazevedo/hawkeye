@@ -21,7 +21,11 @@ elasticsearch:
           type: text
           index: false
 
+observability:
+  jaeger_endpoint: "jaeger:4318"
+
 settings:
+  application_name: hawkeye
   secret: uY7abg321tyw097
   server:
     port: ":8080"

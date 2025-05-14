@@ -3,18 +3,22 @@ package modules
 import (
 	"context"
 
+	"go.opentelemetry.io/otel"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.uber.org/fx"
 
-	"github.com/michelsazevedo/hawkeye/api"
-	"github.com/michelsazevedo/hawkeye/domain"
-	"github.com/michelsazevedo/hawkeye/repository"
-	"github.com/michelsazevedo/hawkeye/repository/nats"
+	"github.com/michelsazevedo/hawkeye/internal/api"
+	"github.com/michelsazevedo/hawkeye/internal/domain"
+	"github.com/michelsazevedo/hawkeye/internal/repository"
+	"github.com/michelsazevedo/hawkeye/internal/repository/nats"
+	"github.com/michelsazevedo/hawkeye/pkg/observability"
 	"github.com/rs/zerolog/log"
 )
 
 func Modules() fx.Option {
 	return fx.Options(
 		fx.Provide(
+			observability.NewTracerProvider,
 			nats.NewNatsRepository,
 			repository.NewCourseRepository,
 			fx.Annotate(
@@ -39,6 +43,16 @@ func Modules() fx.Option {
 						}
 					}()
 					return nil
+				},
+			})
+		}),
+		fx.Invoke(func(lc fx.Lifecycle, tracer *sdktrace.TracerProvider) {
+			otel.SetTracerProvider(tracer)
+
+			lc.Append(fx.Hook{
+				OnStop: func(ctx context.Context) error {
+					log.Info().Msg("Shutting down OpenTelemetry tracer provider")
+					return tracer.Shutdown(ctx)
 				},
 			})
 		}),

@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/labstack/echo/v4"
-	"github.com/michelsazevedo/hawkeye/domain"
+	"github.com/michelsazevedo/hawkeye/internal/domain"
 )
 
 type ApiCollectionResponse[T any] struct {

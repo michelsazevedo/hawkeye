@@ -10,8 +10,12 @@ import (
 
 	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/elastic/go-elasticsearch/v8/esapi"
-	"github.com/michelsazevedo/hawkeye/domain"
+	"github.com/michelsazevedo/hawkeye/internal/domain"
 	"github.com/rs/zerolog/log"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/trace"
 )
 
 var (
@@ -84,8 +88,19 @@ func (es *ElasticSearchRepository[T]) CreateIndex(ctx context.Context, name stri
 }
 
 func (es *ElasticSearchRepository[T]) Index(ctx context.Context, index string, doc T) error {
+	tracer := otel.Tracer("elasticsearch.repository")
+	ctx, span := tracer.Start(ctx, "elasticsearch.index.course",
+		trace.WithAttributes(
+			attribute.String("es.index", index),
+			attribute.String("document.id", doc.GetID()),
+		),
+	)
+	defer span.End()
+
 	body, err := json.Marshal(doc)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "Failed to marshal object")
 		log.Error().Err(err).Msg("Failed to marshal object for indexing")
 		return err
 	}
@@ -97,12 +112,14 @@ func (es *ElasticSearchRepository[T]) Index(ctx context.Context, index string, d
 		es.client.Index.WithContext(ctx),
 	)
 	if err != nil {
-		log.Error().Err(err).Msg("Failed to index course")
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "Failed to index Document")
+		log.Error().Err(err).Msg("Failed to index Document")
 		return err
 	}
 
 	defer res.Body.Close()
-	log.Info().Msgf("Course indexed: %s", doc.GetID())
+	log.Info().Msgf("Document indexed: %s", doc.GetID())
 
 	return nil
 }

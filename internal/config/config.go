@@ -14,11 +14,16 @@ import (
 
 // Settings
 type Settings struct {
-	Secret string `yaml:"secret"`
-	Server struct {
+	Secret          string `yaml:"secret"`
+	ApplicationName string `yaml:"application_name"`
+	Server          struct {
 		Port string `yaml:"port"`
 		Host string `yaml:"host"`
 	}
+}
+
+type Observability struct {
+	JaegerEndpoint string `yaml:"jaeger_endpoint"`
 }
 
 type EsIndex struct {
@@ -42,13 +47,17 @@ type Config struct {
 		URL string `yaml:"url"`
 	} `yaml:"nats"`
 
+	Observability struct {
+		JaegerEndpoint string `yaml:"jaeger_endpoint"`
+	} `yaml:"observability"`
+
 	Settings Settings `yaml:"settings"`
 }
 
 // NewConfig ...
 func NewConfig() (*Config, error) {
 	absPath, _ := filepath.Abs(".")
-	file, err := ExpandEnv(filepath.Join(path.Clean(absPath), "config", "config.yaml"))
+	file, err := ExpandEnv(filepath.Join(path.Clean(absPath), "internal/config", "config.yaml"))
 	if err != nil {
 		return nil, err
 	}

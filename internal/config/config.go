@@ -1,13 +1,10 @@
 package config
 
 import (
-	"bytes"
+	_ "embed"
 	"encoding/json"
 	"fmt"
-	"io"
 	"os"
-	"path"
-	"path/filepath"
 
 	"gopkg.in/yaml.v3"
 )
@@ -54,22 +51,20 @@ type Config struct {
 	Settings Settings `yaml:"settings"`
 }
 
+//go:embed config.yaml
+var embeddedConfig []byte
+
 // NewConfig ...
 func NewConfig() (*Config, error) {
-	absPath, _ := filepath.Abs(".")
-	file, err := ExpandEnv(filepath.Join(path.Clean(absPath), "internal/config", "config.yaml"))
-	if err != nil {
+	data := []byte(os.ExpandEnv(string(embeddedConfig)))
+
+	configs := &Config{}
+
+	if err := yaml.Unmarshal(data, configs); err != nil {
 		return nil, err
 	}
 
-	cfg := &Config{}
-	yd := yaml.NewDecoder(file)
-	err = yd.Decode(cfg)
-
-	if err != nil {
-		return nil, err
-	}
-	return cfg, nil
+	return configs, nil
 }
 
 func (c *Config) GetElasticsearchUrls() []string {
@@ -104,24 +99,4 @@ func (c *Config) GetElasticSearchIndex(name string) ([]byte, error) {
 		}
 	}
 	return nil, fmt.Errorf("index %s not found", name)
-}
-
-func ExpandEnv(configs string) (io.Reader, error) {
-	file, err := os.Open(configs)
-	if err != nil {
-		return nil, err
-	}
-
-	defer func() {
-		err = file.Close()
-	}()
-
-	bufferConfigs := new(bytes.Buffer)
-	_, err = bufferConfigs.ReadFrom(file)
-	if err != nil {
-		return nil, err
-	}
-
-	bytesConfigs := []byte(os.ExpandEnv(bufferConfigs.String()))
-	return bytes.NewReader(bytesConfigs), nil
 }
